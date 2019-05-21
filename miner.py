@@ -29,15 +29,20 @@ class Miner(object):
         self.loss_func = nn.MSELoss()
 
     def choose_action(self, x):
+        x = torch.FloatTensor(x)
+        x = torch.unsqueeze(x, 0)
         x = torch.unsqueeze(x, 0)
         if random.random() < self.epsilon:
             actions = self.eval_net(x)
             action = torch.max(actions, 1)[1].data.numpy()[0]
         else:
-            action = random.randint(0, self.out_length)
+            action = random.randint(1, self.out_length)
+            action -= 1
         return action
 
     def store_transition(self, s, a, r, s_):
+        s = s.reshape(-1)
+        s_ = s_.reshape(-1)
         transition = np.hstack((s, [a, r], s_))
         index = self.memory_counter % self.memory_capacity
         self.memory[index, :] = transition
@@ -55,7 +60,12 @@ class Miner(object):
         b_r = torch.FloatTensor(b_memory[:, self.out_length+1:self.out_length+2])
         b_s_ = torch.FloatTensor(b_memory[:, -self.out_length:]).reshape((32, 1, 8, 8))
 
-        q_eval = self.eval_net(b_s).gather(1, b_a)
+        q_eval = self.eval_net(b_s)
+        # try:
+        # print(b_a)
+        q_eval = q_eval.gather(1, b_a)
+        # except RuntimeError:
+        #     print(b_a)
         q_next = self.target_net(b_s_).detach()
         q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batch_size, 1)
         loss = self.loss_func(q_eval, q_target)
@@ -64,7 +74,8 @@ class Miner(object):
         loss.backward()
         self.optimizer.step()
 
-miner = Miner('easy', 0.9, 2000, 100, 32, 0.9)
-x = torch.zeros((1, 8, 8))
-miner.choose_action(x)
-miner.learn()
+# miner = Miner('easy', 0.9, 2000, 100, 32, 0.9)
+# x = torch.zeros((1, 8, 8))
+# miner.choose_action(x)
+# miner.store_transition(x, 1, 1, x)
+# miner.learn()

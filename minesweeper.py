@@ -23,9 +23,10 @@ class Minesweeper(object):
 			self.n_mines = 99
 		self.uncleared_blocks = self.width * self.height - self.n_mines
 
-		self.map = [[0 for i in range(self.width)] for j in range(self.height)]
-		self.mines = [[0 for i in range(self.width)] for j in range(self.height)]
-		self.mask = [[-1 for i in range(self.width)] for j in range(self.height)]
+		self.map = np.zeros((self.height, self.width)) # [[0 for i in range(self.width)] for j in range(self.height)]
+		self.mines = np.zeros((self.height, self.width)) # [[0 for i in range(self.width)] for j in range(self.height)]
+		self.mask = np.zeros((self.height, self.width)) # [[-1 for i in range(self.width)] for j in range(self.height)]
+		self.mask.fill(-1)
 		
 		for index in random.sample(range(self.width * self.height), self.n_mines):
 			self.map[index // self.width][index % self.width] = 1
@@ -36,12 +37,17 @@ class Minesweeper(object):
 				if self.map[i][j] == 1:
 					self.mines[i][j] = 9
 
-	def action(self, x, y):
-		self.mask[x][y] = self.mines[x][y]
+	def action(self, a):
+		x = a // self.width
+		y = a % self.width
+		try:
+			self.mask[x][y] = self.mines[x][y]
+		except IndexError:
+			print(x, y)
 
 		if self.map[x][y] == 1:
 			self.status = -1
-			print('failed!')
+			# print('failed!')
 		else:
 			if self.mines[x][y] == 0:
 				self.clear_empty_blocks(x, y)
@@ -49,7 +55,7 @@ class Minesweeper(object):
 				self.uncleared_blocks -= 1
 			if self.uncleared_blocks == 0:
 				self.status = 1
-				print('win!')
+				# print('win!')
 
 	def clear_empty_blocks(self, i, j):
 		self.mask[i][j] = self.mines[i][j]
@@ -64,6 +70,17 @@ class Minesweeper(object):
 				if n[0] == -1 or n[1] == -1 or n[0] >= self.height or n[1] >= self.width or self.mask[n[0]][n[1]] != -1:
 					continue
 				self.clear_empty_blocks(n[0], n[1])
+
+	def get_score(self):
+		sum = 0
+		for i in self.mask:
+			for j in i:
+				if j != -1:
+					sum += 1
+		return sum
+
+	def get_state(self):
+		return self.mask
 
 	def get_status(self):
 		return self.status
@@ -91,10 +108,9 @@ class Minesweeper(object):
 				mine_num += 1
 		return mine_num
 
-game = Minesweeper('easy')
-game.show()
-while (game.get_status() == 0):
-	x = input('input x: ')
-	y = input('input y: ')
-	game.action(int(x), int(y))
-	game.show()
+# game = Minesweeper('easy')
+# game.show()
+# while (game.get_status() == 0):
+# 	a = input('input a: ')
+# 	game.action(int(a))
+# 	game.show()
