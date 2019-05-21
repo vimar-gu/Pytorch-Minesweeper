@@ -51,15 +51,13 @@ class Minesweeper(object):
 		else:
 			if self.mines[x][y] == 0:
 				self.clear_empty_blocks(x, y)
-			else:
-				self.uncleared_blocks -= 1
+			self.uncleared_blocks = self.width * self.height - self.n_mines - (self.mask != -1).sum()
 			if self.uncleared_blocks == 0:
 				self.status = 1
 				# print('win!')
 
 	def clear_empty_blocks(self, i, j):
 		self.mask[i][j] = self.mines[i][j]
-		self.uncleared_blocks -= 1
 		if self.mines[i][j] != 0:
 			return
 		else:
@@ -80,7 +78,7 @@ class Minesweeper(object):
 		return sum
 
 	def get_state(self):
-		return self.mask
+		return self.mask.copy()
 
 	def get_status(self):
 		return self.status

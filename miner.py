@@ -55,17 +55,12 @@ class Miner(object):
 
         sample_index = random.sample(range(self.memory_capacity), self.batch_size)
         b_memory = self.memory[sample_index, :]
-        b_s = torch.FloatTensor(b_memory[:, :self.out_length]).reshape((32, 1, 8, 8))
+        b_s = torch.FloatTensor(b_memory[:, :self.out_length]).reshape((self.batch_size, 1, 8, 8))
         b_a = torch.LongTensor(b_memory[:, self.out_length:self.out_length+1].astype(int))
         b_r = torch.FloatTensor(b_memory[:, self.out_length+1:self.out_length+2])
-        b_s_ = torch.FloatTensor(b_memory[:, -self.out_length:]).reshape((32, 1, 8, 8))
+        b_s_ = torch.FloatTensor(b_memory[:, -self.out_length:]).reshape((self.batch_size, 1, 8, 8))
 
-        q_eval = self.eval_net(b_s)
-        # try:
-        # print(b_a)
-        q_eval = q_eval.gather(1, b_a)
-        # except RuntimeError:
-        #     print(b_a)
+        q_eval = self.eval_net(b_s).gather(1, b_a)
         q_next = self.target_net(b_s_).detach()
         q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batch_size, 1)
         loss = self.loss_func(q_eval, q_target)
