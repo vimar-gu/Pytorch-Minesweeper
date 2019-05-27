@@ -69,6 +69,12 @@ class Miner(object):
         loss.backward()
         self.optimizer.step()
 
+    def save_params(self):
+        torch.save(self.eval_net.state_dict(), 'eval.pth')
+
+    def load_params(self, path):
+        self.eval_net.load_state_dict(torch.load(path))
+
 # miner = Miner('easy', 0.9, 2000, 100, 32, 0.9)
 # x = torch.zeros((1, 8, 8))
 # miner.choose_action(x)
